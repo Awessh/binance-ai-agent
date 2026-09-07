@@ -1,0 +1,42 @@
+{
+  "name": "binance-mcp-dashboard",
+  "displayName": "Binance MCP Dashboard",
+  "description": "VS Code dashboard for Binance MCP data and guarded AI requests.",
+  "version": "0.0.1",
+  "private": true,
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onCommand:binanceMcpDashboard.open"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "binanceMcpDashboard.open",
+        "title": "Binance MCP: Open Dashboard"
+      }
+    ],
+    "configuration": {
+      "title": "Binance MCP Dashboard",
+      "properties": {
+        "binanceMcpDashboard.dataMode": {
+          "type": "string",
+          "enum": ["mcp"],
+          "default": "mcp",
+          "description": "Use the authenticated Binance MCP tools registered by VS Code."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./tsconfig.json",
+    "watch": "tsc -p ./tsconfig.json --watch",
+    "check": "tsc -p ./tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.96.0",
+    "typescript": "^5.7.2"
+  }
+}
