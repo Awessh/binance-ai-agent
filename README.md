@@ -1,88 +1,106 @@
 # Binance MCP Dashboard
 
-Extension VS Code locale pour afficher des données Binance via le serveur MCP connecté à VS Code et dialoguer avec un provider LLM.
+A local VS Code extension to display Binance data via the MCP server connected to VS Code and interact with an LLM provider.
 
-## État actuel
+## Current State
 
-Le dashboard appelle les outils Binance enregistrés par VS Code via `vscode.lm.invokeTool`. Il ne contient aucune donnée mockée et ne demande pas de recopier l'authentification OAuth du serveur MCP.
+The dashboard calls Binance tools registered by VS Code via `vscode.lm.invokeTool`. It does not contain any mocked data and does not require copying the OAuth authentication from the MCP server.
 
-Le chat utilise le modèle Copilot disponible via `vscode.lm.selectChatModels`. Il transforme les demandes en réponses ou en intentions JSON contrôlées. Une intention d'ordre ne peut devenir un appel Binance qu'après validation du symbole, du type, de la quantité, du prix, du marché actuel et du solde disponible, puis confirmation explicite dans le dashboard.
+The chat uses the Copilot model available via `vscode.lm.selectChatModels`. It transforms requests into responses or controlled JSON intents. An order intent can only become a Binance call after validation of the symbol, type, quantity, price, current market, and available balance, followed by explicit confirmation in the dashboard.
 
-## Ce que fait réellement l'agent
+## What the Agent Actually Does
 
-L'agent est une extension VS Code qui sert d'intermédiaire contrôlé entre GitHub Copilot, le serveur MCP Binance et un dashboard intégré. Il ne se connecte pas directement avec une clé Binance dans le navigateur : il utilise les outils MCP authentifiés et enregistrés par VS Code.
+The agent is a VS Code extension that acts as a controlled intermediary between GitHub Copilot, the Binance MCP server, and an integrated dashboard. It does not connect directly with a Binance key in the browser: it uses MCP tools authenticated and registered by VS Code.
 
-### Données récupérées
+### Data Retrieved
 
-Après l'action `Refresh`, l'agent récupère les données réelles via MCP :
+After the `Refresh` action, the agent retrieves the actual data via MCP:
 
-- le compte Spot et les soldes disponibles ;
-- les prix et statistiques 24h de `BTCUSDT`, `ETHUSDT` et `BNBUSDT` ;
-- la variation de prix et le volume lorsque Binance les fournit.
+- the Spot account and available balances;
 
-Le dashboard conserve le dernier snapshot en mémoire. Il n'interroge pas Binance automatiquement à chaque variation de prix. Une nouvelle lecture MCP est lancée uniquement après `Refresh`, ou lorsqu'une opération doit être revérifiée.
+- the 24-hour prices and statistics of `BTCUSDT`, `ETHUSDT`, and `BNBUSDT`;
 
-### Analyse de marché
+- the price change and volume when provided by Binance.
 
-Vous pouvez écrire une demande en anglais, par exemple :
+The dashboard retains the last snapshot in memory. It does not automatically query Binance with every price change. A new MCP read is initiated only after `Refresh`, or when a trade needs to be rechecked.
+
+### Market Analysis
+
+You can write a request in English, for example:
 
 ```text
 Analyze BTCUSDT and propose a conservative position.
-```
 
-L'agent transmet au modèle Copilot les données réelles déjà récupérées. Le modèle retourne une analyse structurée en anglais qui peut contenir :
+``
 
-- une synthèse du marché ;
-- une thèse de trading ;
-- les risques identifiés ;
-- une proposition `BUY` ou `SELL` ;
-- un symbole, un type d'ordre, une quantité et éventuellement un prix.
+The agent sends the real data it has already retrieved to the Copilot model. The model returns a structured analysis in English that may include:
 
-La proposition du modèle est une suggestion, pas une exécution automatique. L'agent la revalide avec les données Binance avant de l'afficher.
+- a market summary;
 
-### Passage d'un ordre
+- a trading thesis;
 
-Pour une proposition valide, le dashboard affiche une carte de confirmation contenant le symbole, le sens, la quantité, le type, le prix, le montant estimé et le solde vérifié.
+- identified risks;
 
-L'appel `spot_newOrder` n'est effectué que si vous cliquez sur `Confirm order`. Avant l'envoi, l'agent vérifie à nouveau :
+- a `BUY` or `SELL` recommendation;
 
-- le format du symbole ;
-- le côté et le type de l'ordre ;
-- la quantité et le prix ;
-- l'existence du marché ;
-- le solde disponible ;
-- un montant estimé supérieur à zéro et inférieur ou égal à 10 000 USD.
+- a symbol, an order type, a quantity, and optionally a price.
 
-`Reject proposal` annule la proposition et n'envoie aucun ordre à Binance.
+The model's recommendation is a suggestion, not an automatic execution. The agent revalidates it with Binance data before displaying it.
 
-### Ce que l'agent ne fait pas encore
+### Placing an Order
 
-- Il ne fait pas de trading autonome.
-- Il ne lance pas d'ordre sans confirmation explicite.
-- Il ne gère pas encore les transferts entre portefeuilles.
-- Il ne gère pas encore l'annulation d'ordres.
-- Il ne fournit pas de conseil financier garanti et ne promet aucun résultat.
-- Il ne surveille pas automatiquement le marché en arrière-plan.
+For a valid recommendation, the dashboard displays a confirmation card containing the symbol, direction, quantity, type, price, estimated amount, and verified balance.
 
-## Lancer
+The `spot_newOrder` call is only executed if you click `Confirm order`. Before sending, the agent rechecks:
+
+- the symbol format;
+
+- the side and type of the order;
+- Quantity and price;
+
+- Market availability;
+
+- Available balance;
+
+- An estimated amount greater than zero and less than or equal to USD 10,000.
+
+`Reject proposal` cancels the proposal and does not send any orders to Binance.
+
+### What the agent does not yet do
+
+- It does not perform autonomous trading.
+
+- It does not place orders without explicit confirmation.
+
+- It does not yet handle transfers between wallets.
+
+- It does not yet handle order cancellations.
+
+- It does not provide guaranteed financial advice and does not promise any results.
+
+- It does not automatically monitor the market in the background.
+
+## Launch
 
 ```powershell
 npm install
-npm run compile
+```npm run compile
 ```
 
-Dans VS Code :
+In VS Code:
 
-1. Ouvrir ce dossier.
-2. Appuyer sur `F5` pour lancer l'Extension Development Host.
-3. Exécuter `Binance MCP: Open Dashboard` dans la palette de commandes.
+1. Open this folder.
 
-Dans le dashboard, cliquez sur `Refresh` pour charger les données réelles. Les confirmations MCP sont contrôlées par VS Code et peuvent apparaître lors de la première lecture autorisée.
+2. Press `F5` to launch the Extension Development Host.
 
-Le réglage `binanceMcpDashboard.dataMode` est fixé à `mcp`. Les ordres LIMIT et MARKET passent par `spot_newOrder`, avec un plafond de 10 000 USD par ordre et une nouvelle validation au moment de la confirmation. Les transferts et annulations ne sont pas encore implémentés.
+3. Run `Binance MCP: Open Dashboard` from the command palette.
 
-Pour utiliser le chat, GitHub Copilot doit être connecté dans VS Code et un modèle doit être disponible pour l'API `vscode.lm`.
+In the dashboard, click `Refresh` to load live data. MCP confirmations are controlled by VS Code and may appear on the first authorized read.
 
-## Sécurité
+The `binanceMcpDashboard.dataMode` setting is set to `mcp`. LIMIT and MARKET orders are placed via `spot_newOrder`, with a limit of $10,000 per order and a re-validation upon confirmation. Transfers and cancellations are not yet implemented.
 
-Les clés LLM et Binance ne doivent jamais être placées dans le Webview, le dépôt ou les logs. L'authentification Binance reste gérée par VS Code et les opérations réelles sont protégées par une validation côté extension et une confirmation explicite dans le dashboard.
+To use the chat, GitHub Copilot must be logged into VS Code, and a template must be available for the `vscode.lm` API.
+
+## Security
+
+LLM and Binance keys should never be stored in the Webview, repository, or logs. Binance authentication remains handled by VS Code and actual operations are protected by extension-side validation and explicit confirmation in the dashboard.
